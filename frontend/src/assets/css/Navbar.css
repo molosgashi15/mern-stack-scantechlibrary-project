@@ -1,11 +1,12 @@
 .navbar {
 color: white;
-background-color: blue;
-height: 50px;
+background-color: black;
+height: 60px;
 display: flex;
 align-items: center;
 justify-content: space-between;
 padding: 0 20px;
+border-radius: 30px;
 }
 
 .navbar a {
