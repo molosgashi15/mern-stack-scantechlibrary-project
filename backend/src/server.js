@@ -2,26 +2,56 @@
 require("dotenv").config();
 const express = require("express");
 const cors = require("cors");
-const connectDB = require("./src/config/db");
-const studentRoutes = require("./src/routes/studentRoutes");
-const bookRoutes = require("./src/routes/bookRoutes");
-const loanRoutes = require("./src/routes/loanRoutes");
-const statsRoutes = require("./src/routes/statsRoutes");
-const { notFound, errorHandler } = require("./src/middleware/errorHandler");
+const { notFound, errorHandler } = require("./errorHandler");
+
 const app = express();
-// 1) Global middleware
 app.use(cors());
-app.use(express.json()); // parse JSON bodies
-// 2) Routes
-app.use("/api/students", studentRoutes);
-app.use("/api/books", bookRoutes);
-app.use("/api/loans", loanRoutes);
-app.use("/api/stats", statsRoutes);
-// 3) Error middleware (must be last)
+app.use(express.json());
+
+// Sample in-memory data for a minimal library API
+const books = [
+	{ id: 1, title: "Pride and Prejudice", author: "Jane Austen", available: true },
+	{ id: 2, title: "1984", author: "George Orwell", available: true },
+	{ id: 3, title: "To Kill a Mockingbird", author: "Harper Lee", available: false },
+	{ id: 4, title: "The Great Gatsby", author: "F. Scott Fitzgerald", available: true },
+	{ id: 5, title: "Moby Dick", author: "Herman Melville", available: true }
+];
+
+const students = [
+	{ id: 1, name: "Alice Johnson" },
+	{ id: 2, name: "Bob Smith" }
+];
+
+app.get("/api/books", (req, res) => {
+	res.json(books);
+});
+
+app.get("/api/books/:id", (req, res) => {
+	const book = books.find(b => b.id === Number(req.params.id));
+	if (!book) return res.status(404).json({ message: "Book not found" });
+	res.json(book);
+});
+
+app.get("/api/students", (req, res) => {
+	res.json(students);
+});
+
+app.get("/api/stats", (req, res) => {
+	res.json({ books: books.length, students: students.length, loans: 0 });
+});
+
+app.post("/api/loans", (req, res) => {
+	const { bookId, studentId } = req.body || {};
+	if (!bookId || !studentId) return res.status(400).json({ message: "bookId and studentId required" });
+	// In-memory mock: mark book unavailable
+	const book = books.find(b => b.id === Number(bookId));
+	if (book) book.available = false;
+	res.status(201).json({ message: "Loan recorded (mock)", bookId, studentId });
+});
+
+// 404 + error middleware
 app.use(notFound);
 app.use(errorHandler);
+
 const PORT = process.env.PORT || 5000;
-connectDB().then(() => {
- app.listen(PORT, () => console.log("API running on port " + PORT));
-}
-);
+app.listen(PORT, () => console.log(`API running on port ${PORT}`));
